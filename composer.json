@@ -15,7 +15,8 @@
     "version": "0.1",
     "require": {
         "php": ">=5.3.2",
-        "chrisboulton/php-resque": "1.2.x",
+        "ext-pcntl": "*",
+        "chrisboulton/php-resque": "dev-master#c335bc35558e0683f95c3fd5dd11a5817c0a761f",
         "php-curl-class/php-curl-class": "2.1.*"
     },
 	"minimum-stability": "dev",
