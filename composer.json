@@ -21,9 +21,6 @@
     "require-dev": {
         "phpunit/phpunit": "*"
     },
-    "replace": {
-        "codemonkeys-ru/gcm-message": "*"
-    },
 	"minimum-stability": "dev",
 	"autoload": {
         "classmap": [
