@@ -1,12 +1,12 @@
 <?php
-namespace CodeMonkeysRu\GCM;
+namespace PhpGcmQueue;
 
 /**
  * Class Message
  *
- * @package CodeMonkeysRu\GCM
- * @author Vladimir Savenkov <ivariable@gmail.com>
+ * @package PhpGcmQueue
  * @author Steve Tauber <taubers@gmail.com>
+ * @author Vladimir Savenkov <ivariable@gmail.com>
  * TODO: Add notification_key when it's stable and working.
  */
 class Message {
@@ -119,7 +119,7 @@ class Message {
      * @param array $array Array of params to set on the object.
      *
      * @return Message
-     * @throws Exception When required params not sent.
+     * @throws PhpGcmQueueException When required params not sent.
      */
     public static function fromArray(array $array) {
         $return = null;
@@ -134,7 +134,7 @@ class Message {
             }
             return $return;
         } else {
-            throw new Exception('GCM\Client::fromArray - Invalid or Missing Registration IDs: ' . print_r($array, true) , Exception::INVALID_PARAMS);
+            throw new PhpGcmQueueException('GCM\Client::fromArray - Invalid or Missing Registration IDs: ' . print_r($array, true) , PhpGcmQueueException::INVALID_PARAMS);
         }
     }
 
@@ -189,12 +189,12 @@ class Message {
      * @param array $registrationIds
      *
      * @return $this
-     * @throws Exception When invalid number of Registration IDs.
+     * @throws PhpGcmQueueException When invalid number of Registration IDs.
      */
     public function setRegistrationIds(array $registrationIds) {
         $count = count($registrationIds);
         if (!$count || $count > self::MAX_REG_IDS) {
-            throw new Exception('GCM\Client->setRegistrationIds - Must contain 1-1000 (inclusive) Registration IDs. Count: ' . $count, Exception::MALFORMED_REQUEST);
+            throw new PhpGcmQueueException('GCM\Client->setRegistrationIds - Must contain 1-1000 (inclusive) Registration IDs. Count: ' . $count, PhpGcmQueueException::MALFORMED_REQUEST);
         }
         $this->registrationIds = $registrationIds;
         return $this;
@@ -219,11 +219,11 @@ class Message {
      * @param array $data Data to send.
      *
      * @return $this
-     * @throws Exception When encoded JSON exceeds MAX_SIZE bytes.
+     * @throws PhpGcmQueueException When encoded JSON exceeds MAX_SIZE bytes.
      */
     public function setData(array $data) {
         if (strlen(json_encode($data)) > Message::MAX_SIZE) {
-            throw new Exception('GCM\Client->setData - Data payload exceeds limit (max ' . Message::MAX_SIZE .' bytes)', Exception::MALFORMED_REQUEST);
+            throw new PhpGcmQueueException('GCM\Client->setData - Data payload exceeds limit (max ' . Message::MAX_SIZE .' bytes)', PhpGcmQueueException::MALFORMED_REQUEST);
         }
         $this->data = $data;
         return $this;
@@ -248,14 +248,14 @@ class Message {
      * @param null|integer $timeToLive Time to Live.
      *
      * @return $this
-     * @throws Exception When TTL is not null|integer OR TTL is not within range
+     * @throws PhpGcmQueueException When TTL is not null|integer OR TTL is not within range
      */
     public function setTimeToLive($timeToLive) {
         if(!is_null($timeToLive) && !is_numeric($timeToLive)) {
-            throw new Exception('GCM\Client->setTimeToLive - Invalid TimeToLive: ' . $timeToLive, Exception::INVALID_TTL);
+            throw new PhpGcmQueueException('GCM\Client->setTimeToLive - Invalid TimeToLive: ' . $timeToLive, PhpGcmQueueException::INVALID_TTL);
         } else if(is_numeric($timeToLive) && ($timeToLive < self::MIN_TTL || $timeToLive > self::MAX_TTL)) {
-            throw new Exception('GCM\Client->setTimeToLive - TimeToLive must be between '
-                . self::MIN_TTL . ' and ' . self::MAX_TTL . '. Value: ' . $timeToLive, Exception::OUTSIDE_TTL);
+            throw new PhpGcmQueueException('GCM\Client->setTimeToLive - TimeToLive must be between '
+                . self::MIN_TTL . ' and ' . self::MAX_TTL . '. Value: ' . $timeToLive, PhpGcmQueueException::OUTSIDE_TTL);
         }
         $this->timeToLive = $timeToLive;
         return $this;

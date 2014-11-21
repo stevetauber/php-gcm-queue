@@ -1,11 +1,11 @@
 <?php
-namespace CodeMonkeysRu\GCM;
+namespace PhpGcmQueue;
 use Curl\Curl;
 
 /**
  * Messages sender to GCM servers
  *
- * @package CodeMonkeysRu\GCM
+ * @package PhpGcmQueue
  * @author Vladimir Savenkov <ivariable@gmail.com>
  * @author Steve Tauber <taubers@gmail.com>
  */
@@ -25,7 +25,9 @@ class Sender {
      * @param integer $nextDelay Next exponential back off delay.
      *
      * @return Response
-     * @throws Exception When
+     * @throws PhpGcmQueueException When request is malformed
+     * @throws PhpGcmQueueException When authentication fails
+     * @throws PhpGcmQueueException When an unknown error occurs
      */
     public static function send(Message $message, $serverApiKey, $gcmUrl, $nextDelay = 1) {
         $curl = self::initCurl();
@@ -36,10 +38,10 @@ class Sender {
         if ($curl->error) {
             switch($curl->http_status_code) {
                 case 400:
-                    throw new Exception('GCM\Sender->send - Malformed Request: ' . $curl->raw_response, Exception::MALFORMED_REQUEST);
+                    throw new PhpGcmQueueException('GCM\Sender->send - Malformed Request: ' . $curl->raw_response, PhpGcmQueueException::MALFORMED_REQUEST);
                     break;
                 case 401:
-                    throw new Exception('GCM\Sender->send - Authentication Error', Exception::AUTHENTICATION_ERROR);
+                    throw new PhpGcmQueueException('GCM\Sender->send - Authentication Error', PhpGcmQueueException::AUTHENTICATION_ERROR);
                     break;
                 default:
                     $retry = $curl->response_headers['retry-after'];
@@ -59,7 +61,7 @@ class Sender {
                                 return $nextDelay;
                             }
                         }
-                        throw new Exception('GCM\Sender->send - Unknown Error: ' . $curl->raw_response, Exception::UNKNOWN_ERROR);
+                        throw new PhpGcmQueueException('GCM\Sender->send - Unknown Error: ' . $curl->raw_response, PhpGcmQueueException::UNKNOWN_ERROR);
                     }
                     break;
             }
@@ -84,7 +86,7 @@ class Sender {
      * @param string $serverApiKey
      */
     protected static function configCurl(&$curl, $serverApiKey) {
-        $curl->setUserAgent('CodeMonkeysRu\GCMMessage');
+        $curl->setUserAgent('PhpGcmQueue');
         $curl->setOpt(CURLOPT_SSL_VERIFYPEER, 1);
         $curl->setOpt(CURLOPT_SSL_VERIFYHOST, 2);
         $curl->setHeader('Authorization', 'key=' . $serverApiKey);

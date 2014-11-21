@@ -1,13 +1,12 @@
 {
-	"name": "codemonkeys-ru/gcm-message",
+	"name": "stevetauber/php-gcm-queue",
     "type": "library",
-    "description": "Google Cloud Messaging (GCM) PHP Server Library",
-    "keywords": ["GCM", "push message", "android"],
+    "description": "PHP Google Cloud Messaging (GCM) Queue Library",
+    "keywords": ["GCM", "push message", "android", "resque", "redis", "queue", "curl"],
 	"authors": [
 		{
-			"name": "Vladimir Savenkov",
-			"email": "ivariable@gmail.com",
-			"homepage": "http://ivariable.ru",
+			"name": "Steve Tauber",
+			"email": "taubers@gmail.com",
 			"role": "Developer"
 		}
 	],
@@ -19,10 +18,13 @@
         "chrisboulton/php-resque": "dev-master#c335bc35558e0683f95c3fd5dd11a5817c0a761f",
         "php-curl-class/php-curl-class": "2.1.*"
     },
+    "require-dev": {
+        "phpunit/phpunit": "*"
+    },
 	"minimum-stability": "dev",
 	"autoload": {
-        "psr-0": {
-			"CodeMonkeysRu\\GCM": "library/"
-		}
+        "classmap": [
+            "src/"
+        ]
     }
 }

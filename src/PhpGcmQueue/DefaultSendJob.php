@@ -1,11 +1,11 @@
 <?php
 
-namespace CodeMonkeysRu\GCM;
+namespace PhpGcmQueue;
 
 /**
  * Class DefaultSendJob
  *
- * @package CodeMonkeysRu\GCM
+ * @package PhpGcmQueue
  * @author Steve Tauber <taubers@gmail.com>
  */
 abstract class DefaultSendJob {
@@ -65,7 +65,7 @@ abstract class DefaultSendJob {
                         break;
                     case 'InternalServerError':
                         foreach($group as $item) {
-                            throw new Exception('GCM\DefaultSendJob->perform - Unknown Error: ' . $item, Exception::UNKNOWN_ERROR);
+                            throw new PhpGcmQueueException('GCM\DefaultSendJob->perform - Unknown Error: ' . $item, PhpGcmQueueException::UNKNOWN_ERROR);
                         }
                         break;
                     default:

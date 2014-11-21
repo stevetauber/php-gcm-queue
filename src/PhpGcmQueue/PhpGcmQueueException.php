@@ -1,15 +1,15 @@
 <?php
 
-namespace CodeMonkeysRu\GCM;
+namespace PhpGcmQueue;
 
 /**
- * Class Exception
+ * Class PhpGcmQueueException
  *
- * @package CodeMonkeysRu\GCM
- * @author Vladimir Savenkov <ivariable@gmail.com>
+ * @package PhpGcmQueue
  * @author Steve Tauber <taubers@gmail.com>
+ * @author Vladimir Savenkov <ivariable@gmail.com>
  */
-class Exception extends \Exception {
+class PhpGcmQueueException extends \Exception {
 
     const ILLEGAL_API_KEY = 1;
     const AUTHENTICATION_ERROR = 2;

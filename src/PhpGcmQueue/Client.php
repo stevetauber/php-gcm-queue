@@ -1,11 +1,11 @@
 <?php
 
-namespace CodeMonkeysRu\GCM;
+namespace PhpGcmQueue;
 
 /**
  * Class Client
  *
- * @package CodeMonkeysRu\GCM
+ * @package PhpGcmQueue
  * @author Steve Tauber <taubers@gmail.com>
  */
 class Client {
@@ -75,7 +75,7 @@ class Client {
     /**
      * Enqueue the message.
      *
-     * @param \CodeMonkeysRu\GCM\Message $message Message to send.
+     * @param \PhpGcmQueue\Message $message Message to send.
      * @param \DateTime|boolean $delay When to send the message.
      */
     public static function send(Message $message, $delay = false) {

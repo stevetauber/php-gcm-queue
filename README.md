@@ -19,7 +19,7 @@ Example usage
 
 ```php
 <?php
-use \CodeMonkeysRu\GCM;
+use \PhpGcmQueue;
 
 class YourClass {
 
@@ -50,7 +50,7 @@ class YourClass {
 MyQueueJob.php
 ```php
 <?php
-class MyQueueJob extends \CodeMonkeysRu\GCM\DefaultSendJob {
+class MyQueueJob extends \PhpGcmQueue\DefaultSendJob {
 
     /* See DefaultSendJob for all the possible statuses */
     public function tearDown() {

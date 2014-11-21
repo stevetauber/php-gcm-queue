@@ -1,12 +1,12 @@
 <?php
-namespace CodeMonkeysRu\GCM;
+namespace PhpGcmQueue;
 
 /**
  * Class Response
  *
- * @package CodeMonkeysRu\GCM
- * @author Vladimir Savenkov <ivariable@gmail.com>
+ * @package PhpGcmQueue
  * @author Steve Tauber <taubers@gmail.com>
+ * @author Vladimir Savenkov <ivariable@gmail.com>
  */
 class Response {
 
