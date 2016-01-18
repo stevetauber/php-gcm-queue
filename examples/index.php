@@ -89,7 +89,7 @@ if(!empty($_POST)) {
             <input id="to" name="to" type="text" placeholder="Registration Id" value="<?= isset($to) ? $to : '' ?>"/>
 
             <label for="registrationIds">Registration Ids</label>
-            <textarea name="registrationIds" rows="8" placeholder="Registration Ids, one per line"><?= !empty($registrationIds) ? implode("\r\n", $registrationIds) : '' ?></textarea>
+            <textarea name="registrationIds" rows="8" placeholder="Registration Ids, one per line"><?= !empty($registrationIds) ? $registrationIds : '' ?></textarea>
         </fieldset>
         <fieldset>
             <legend>Options</legend>
