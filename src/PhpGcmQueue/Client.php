@@ -14,7 +14,7 @@ class Client {
      *
      * @var string
      */
-    protected static $gcmUrl = 'https://android.googleapis.com/gcm/send';
+    protected static $gcmUrl = 'https://gcm-http.googleapis.com/gcm/send';
 
     /**
      * Queue Name.
@@ -79,13 +79,13 @@ class Client {
      * @param \DateTime|boolean $delay When to send the message.
      */
     public static function send(Message $message, $delay = false) {
-        $args = array(
+        $args = [
             'serverApiKey' => self::$serverApiKey,
             'gcmUrl' => self::$gcmUrl,
             'message' => $message->toArray(),
             'queueName' => self::$queueName,
             'sendJob' => self::$sendJob
-        );
+        ];
 
         if($delay) {
             $args['delay'] = $delay->format('U');

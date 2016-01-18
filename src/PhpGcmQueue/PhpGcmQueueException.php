@@ -19,4 +19,6 @@ class PhpGcmQueueException extends \Exception {
     const INVALID_PARAMS = 6;
     const INVALID_TTL = 7;
     const OUTSIDE_TTL = 8;
+    const INVALID_PRIORITY = 9;
+    const INVALID_TARGET = 10;
 }

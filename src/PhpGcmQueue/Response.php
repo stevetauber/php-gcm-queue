@@ -54,21 +54,21 @@ class Response {
      *
      * @var array
      */
-    protected $results = array();
+    protected $results = [];
 
     /**
      * Array of IDs grouped by failure.
      *
      * @var array
      */
-    protected $failedIds = array();
+    protected $failedIds = [];
 
     /**
      * Array of expired IDs and their new counterpart.
      *
      * @var array
      */
-    protected $newRegistrationIds = array();
+    protected $newRegistrationIds = [];
 
     /**
      * Constructor
@@ -81,8 +81,12 @@ class Response {
         $this->success = $responseBody->success;
         $this->failure = $responseBody->failure;
         $this->canonicalIds = $responseBody->canonical_ids;
-        $this->results = array();
-        $sentIds = $message->getRegistrationIds();
+        $this->results = [];
+        if($message->getTo()) {
+            $sentIds = [$message->getTo()];
+        } else {
+            $sentIds = $message->getRegistrationIds();
+        }
         foreach ($responseBody->results as $k => $v) {
             $id = $sentIds[$k];
             //Convert from stdClass to assoc array
@@ -125,5 +129,17 @@ class Response {
 
     public function getFailedIds() {
        return $this->failedIds;
+    }
+
+    public function toArray() {
+        return [
+            'multicastId' => $this->getMulticastId(),
+            'success' => $this->getSuccessCount(),
+            'failure' => $this->getFailureCount(),
+            'canonicalIds' => $this->getCanonicalIds(),
+            'results' => $this->getResults(),
+            'failedIds' => $this->getFailedIds(),
+            'newRegistrationIds' => $this->getNewRegistrationIds()
+        ];
     }
 }

@@ -7,7 +7,6 @@ namespace PhpGcmQueue;
  * @package PhpGcmQueue
  * @author Steve Tauber <taubers@gmail.com>
  * @author Vladimir Savenkov <ivariable@gmail.com>
- * TODO: Add notification_key when it's stable and working.
  */
 class Message {
 
@@ -32,14 +31,35 @@ class Message {
     const MAX_REG_IDS = 1000;
 
     /**
-     * A string array with the list of devices (registration IDs) receiving the message.
-     * It must contain at least 1 and at most 1000 registration IDs.
+     * Valid Priorities enum.
+     */
+    const VALID_PRIORITIES = [
+        'high' => true,
+        'normal' => true
+    ];
+
+    /**
+     * This parameter specifies the recipient of a message.
+     * The value must be a registration token, notification key, or topic.
      *
-     * Required.
+     * Required unless using Registration Ids.
+     *
+     * @var string
+     */
+    protected $to = '';
+
+    /**
+     * This parameter specifies a list of devices (registration tokens, or IDs) receiving a multicast message.
+     * It must contain at least 1 and at most 1000 registration tokens.
+     *
+     * Use this parameter only for multicast messaging, not for single recipients. Multicast messages (sending
+     * to more than 1 registration tokens) are allowed using HTTP JSON format only.
+     *
+     * Required unless using To.
      *
      * @var array
      */
-    protected $registrationIds = array();
+    protected $registrationIds = [];
 
     /**
      * An arbitrary string (such as "Updates Available") that is used to collapse a group of like messages
@@ -55,9 +75,93 @@ class Message {
     protected $collapseKey = null;
 
     /**
-     * Message payload data.
-     * If present, the payload data it will be included in the Intent as application data,
-     * with the key being the extra's name.
+     * Sets the priority of the message. Valid values are "normal" and "high." On iOS, these correspond to
+     * APNs priority 5 and 10.
+     *
+     * By default, messages are sent with normal priority. Normal priority optimizes the client app's battery
+     * consumption, and should be used unless immediate delivery is required. For messages with normal priority,
+     * the app may receive the message with unspecified delay.
+     *
+     * When a message is sent with high priority, it is sent immediately, and the app can wake a sleeping device
+     * and open a network connection to your server.
+     *
+     * Valid values are high and normal.
+     *
+     * For existing iOS client apps that do not explicitly set delivery priority, GCM's default value starting
+     * 8/13/2015 results in a change in app behavior. In such cases, you'll need to start explicitly setting
+     * high priority for messages that require delivery without delay.
+     *
+     * Optional
+     *
+     * @var string|null
+     */
+    protected $priority = 'high';
+
+    /**
+     * On iOS, use this field to represent content-available in the APNS payload. When a notification or message
+     * is sent and this is set to true, an inactive client app is awoken. On Android, data messages wake the app
+     * by default. On Chrome, currently not supported.
+     *
+     * Optional
+     *
+     * @var bool
+     */
+    protected $contentAvailable = false;
+
+    /**
+     * When this parameter is set to true, it indicates that the message should not be sent until the device
+     * becomes active.
+     *
+     * Optional.
+     *
+     * @var bool
+     */
+    protected $delayWhileIdle = false;
+
+    /**
+     * This parameter specifies how long (in seconds) the message should be kept in GCM storage if the device
+     * is offline. The maximum time to live supported is 4 weeks, and the default value is 4 weeks.
+     *
+     * Optional
+     *
+     * @var int
+     */
+    protected $timeToLive = null;
+
+    /**
+     * This parameter specifies the package name of the application where the registration tokens must match
+     * in order to receive the message.
+     *
+     * Optional.
+     *
+     * @var string|null
+     */
+    protected $restrictedPackageName = '';
+
+    /**
+     * This parameter, when set to true, allows developers to test a request without actually sending a message.
+     *
+     * Optional.
+     *
+     * @var bool
+     */
+    protected $dryRun = false;
+
+    /**
+     * This parameter specifies the custom key-value pairs of the message's payload.
+     *      For example, with data:{"score":"3x1"}:
+     *
+     * On Android, this would result in an intent extra named score with the string value 3x1.
+     *
+     * On iOS, if the message is sent via APNS, it represents the custom data fields. If it is sent via GCM
+     * connection server, it would be represented as key value dictionary in
+     * AppDelegate application:didReceiveRemoteNotification:.
+     *
+     * The key should not be a reserved word ("from" or any word starting with "google" or "gcm"). Do not use
+     * any of the words defined in this table (such as collapse_key).
+     *
+     * Values in string types are recommended. You have to convert values in objects or other non-string data
+     * types (e.g., integers or bools) to string.
      *
      * Optional.
      *
@@ -66,51 +170,28 @@ class Message {
     protected $data = null;
 
     /**
-     * Indicates that the message should not be sent immediately if the device is idle.
-     * The server will wait for the device to become active, and then only the last message
-     * for each collapse_key value will be sent.
+     * This parameter specifies the predefined, user-visible key-value pairs of the notification payload.
+     * @see https://developers.google.com/cloud-messaging/http-server-ref#notification-payload-support
      *
-     * Optional.
-     *
-     * @var boolean
+     * @var array
      */
-    protected $delayWhileIdle = true;
-
-    /**
-     * How long (in seconds) the message should be kept on GCM storage if the device is offline.
-     *
-     * Optional (default time-to-live is 4 weeks).
-     *
-     * @var int
-     */
-    protected $timeToLive = null;
-
-    /**
-     * A string containing the package name of your application.
-     * When set, messages will only be sent to registration IDs that match the package name.
-     *
-     * Optional.
-     *
-     * @var string|null
-     */
-    protected $restrictedPackageName = null;
-
-    /**
-     * Allows developers to test their request without actually sending a message.
-     *
-     * Optional.
-     *
-     * @var boolean
-     */
-    protected $dryRun = false;
+    protected $notification = [];
 
     /**
      * Constructor.
      *
-     * @param array $registrationIds
+     * @param string|array $target
+     *
+     * @throws PhpGcmQueueException
      */
-    public function __construct(array $registrationIds) {
-        $this->registrationIds = $registrationIds;
+    public function __construct($target) {
+        if(is_string($target)) {
+            $this->to = $target;
+        } elseif(is_array($target)) {
+            $this->registrationIds = $target;
+        } else {
+            throw new PhpGcmQueueException('GCM\Client::__construct - Invalid or Missing Target', PhpGcmQueueException::INVALID_TARGET);
+        }
     }
 
     /**
@@ -122,19 +203,27 @@ class Message {
      * @throws PhpGcmQueueException When required params not sent.
      */
     public static function fromArray(array $array) {
-        $return = null;
-        if (isset($array['registration_ids']) && is_array($array['registration_ids'])) {
-            $return = new Message($array['registration_ids']);
+        $target = null;
+        if(isset($array['to'])) {
+            $target = $array['to'];
+            unset($array['to']);
+        } elseif (isset($array['registration_ids'])) {
+            $target = $array['registration_ids'];
             unset($array['registration_ids']);
+        }
+        if($target) {
+            $return = new Message($target);
             foreach ($array as $k => $v) {
-                $methodName = 'set' . preg_replace('/(?:^|_)(.?)/e', "strtoupper('$1')", $k);
+                $methodName = 'set' . preg_replace_callback('/(?:^|_)(.?)/',
+                        function($m) { return strtoupper($m[1]); }
+                        , $k);
                 if (method_exists($return, $methodName)) {
                     $return->$methodName($v);
                 }
             }
             return $return;
         } else {
-            throw new PhpGcmQueueException('GCM\Client::fromArray - Invalid or Missing Registration IDs: ' . print_r($array, true) , PhpGcmQueueException::INVALID_PARAMS);
+            throw new PhpGcmQueueException('GCM\Client::fromArray - Invalid or Missing Target: ' . print_r($array, true) , PhpGcmQueueException::INVALID_TARGET);
         }
     }
 
@@ -144,15 +233,40 @@ class Message {
      * @return array
      */
     public function toArray() {
-        $return = array(
-            'registration_ids' => $this->registrationIds,
-            'collapse_key' => $this->collapseKey,
-            'delay_while_idle' => $this->delayWhileIdle,
-            'time_to_live' => $this->timeToLive,
-            'restricted_package_name' => $this->restrictedPackageName,
-            'dry_run' => $this->dryRun,
-            'data' => $this->data
-        );
+        $return = [];
+        if($this->to !== '') {
+            $return['to'] = $this->to;
+        }
+        if($this->registrationIds !== []) {
+            $return['registration_ids'] = $this->registrationIds;
+        }
+        if($this->collapseKey !== null) {
+            $return['collapse_key'] = $this->collapseKey;
+        }
+        if($this->priority !== 'high') {
+            $return['priority'] = $this->priority;
+        }
+        if($this->contentAvailable !== false) {
+            $return['content_available'] = $this->contentAvailable;
+        }
+        if($this->delayWhileIdle !== false) {
+            $return['delay_while_idle'] = $this->delayWhileIdle;
+        }
+        if($this->timeToLive !== null) {
+            $return['time_to_live'] = $this->timeToLive;
+        }
+        if($this->restrictedPackageName !== '') {
+            $return['restricted_package_name'] = $this->restrictedPackageName;
+        }
+        if($this->dryRun !== false) {
+            $return['dry_run'] = $this->dryRun;
+        }
+        if($this->data !== null) {
+            $return['data'] = $this->data;
+        }
+        if($this->notification !== null) {
+            $return['notification'] = $this->notification;
+        }
         return $return;
     }
 
@@ -172,6 +286,29 @@ class Message {
      */
     public function __toString() {
         return json_encode($this->toArray());
+    }
+
+    /**
+     * Get To.
+     *
+     * @return string
+     */
+    public function getTo()
+    {
+        return $this->to;
+    }
+
+    /**
+     * Set To.
+     *
+     * @param string $to
+     *
+     * @return $this
+     */
+    public function setTo($to)
+    {
+        $this->to = $to;
+        return $this;
     }
 
     /**
@@ -200,15 +337,172 @@ class Message {
         return $this;
     }
 
+    /**
+     * Get Collapse Key.
+     *
+     * @return null|string
+     */
     public function getCollapseKey() {
         return $this->collapseKey;
     }
 
+    /**
+     * Set Collapse Key.
+     *
+     * @param string $collapseKey
+     *
+     * @return $this
+     */
     public function setCollapseKey($collapseKey) {
         $this->collapseKey = $collapseKey;
         return $this;
     }
 
+    /**
+     * Get Priority.
+     *
+     * @return null|string
+     */
+    public function getPriority()
+    {
+        return $this->priority;
+    }
+
+    /**
+     * Set Priority.
+     *
+     * @param string $priority
+     *
+     * @return $this
+     * @throws PhpGcmQueueException
+     */
+    public function setPriority($priority)
+    {
+        if(!array_key_exists($priority, self::VALID_PRIORITIES)) {
+            throw new PhpGcmQueueException('GCM\Client->setPriority - Must be high or normal', PhpGcmQueueException::INVALID_PRIORITY);
+        }
+        $this->priority = $priority;
+        return $this;
+    }
+
+    /**
+     * Get Content Available.
+     *
+     * @return bool
+     */
+    public function getContentAvailable()
+    {
+        return $this->contentAvailable;
+    }
+
+    /**
+     * Set Content Available.
+     *
+     * @param bool $contentAvailable
+     *
+     * @return $this
+     */
+    public function setContentAvailable($contentAvailable)
+    {
+        $this->contentAvailable = $contentAvailable;
+        return $this;
+    }
+
+    /**
+     * Get Delay While Idle.
+     *
+     * @return bool
+     */
+    public function getDelayWhileIdle() {
+        return $this->delayWhileIdle;
+    }
+
+    /**
+     * Set Delay While Idle.
+     *
+     * @param bool $delayWhileIdle
+     *
+     * @return $this
+     */
+    public function setDelayWhileIdle($delayWhileIdle) {
+        $this->delayWhileIdle = $delayWhileIdle;
+        return $this;
+    }
+
+    /**
+     * Get Time To Live.
+     *
+     * @return int
+     */
+    public function getTimeToLive() {
+        return $this->timeToLive;
+    }
+
+    /**
+     * Set Time To Live.
+     *
+     * @param integer $timeToLive Time to Live.
+     *
+     * @return $this
+     * @throws PhpGcmQueueException When TTL is not null|integer OR TTL is not within range
+     */
+    public function setTimeToLive($timeToLive) {
+        if(!is_null($timeToLive) && !is_numeric($timeToLive)) {
+            throw new PhpGcmQueueException('GCM\Client->setTimeToLive - Invalid TimeToLive: ' . $timeToLive, PhpGcmQueueException::INVALID_TTL);
+        } else if(is_numeric($timeToLive) && ($timeToLive < self::MIN_TTL || $timeToLive > self::MAX_TTL)) {
+            throw new PhpGcmQueueException('GCM\Client->setTimeToLive - TimeToLive must be between '
+                . self::MIN_TTL . ' and ' . self::MAX_TTL . '. Value: ' . $timeToLive, PhpGcmQueueException::OUTSIDE_TTL);
+        }
+        $this->timeToLive = $timeToLive;
+        return $this;
+    }
+
+    /**
+     * Get Restricted Package Name.
+     * 
+     * @return null|string
+     */
+    public function getRestrictedPackageName() {
+        return $this->restrictedPackageName;
+    }
+
+    /**
+     * Set Restricted Package Name.
+     * 
+     * @param string $restrictedPackageName
+     * @return $this
+     */
+    public function setRestrictedPackageName($restrictedPackageName) {
+        $this->restrictedPackageName = $restrictedPackageName;
+        return $this;
+    }
+
+    /**
+     * Get Dry Run.
+     *
+     * @return bool
+     */
+    public function getDryRun() {
+        return $this->dryRun;
+    }
+
+    /**
+     * Set Dry Run.
+     *
+     * @param bool $dryRun
+     *
+     * @return $this
+     */
+    public function setDryRun($dryRun) {
+        $this->dryRun = $dryRun;
+        return $this;
+    }
+    
+    /**
+     * Get Data.
+     *
+     * @return array|null
+     */
     public function getData() {
         return $this->data;
     }
@@ -229,53 +523,27 @@ class Message {
         return $this;
     }
 
-    public function getDelayWhileIdle() {
-        return $this->delayWhileIdle;
-    }
-
-    public function setDelayWhileIdle($delayWhileIdle) {
-        $this->delayWhileIdle = $delayWhileIdle;
-        return $this;
-    }
-
-    public function getTimeToLive() {
-        return $this->timeToLive;
+    /**
+     * Get Notification.
+     *
+     * @return array
+     */
+    public function getNotification()
+    {
+        return $this->notification;
     }
 
     /**
-     * Set TTL.
+     * Set Notification.
      *
-     * @param null|integer $timeToLive Time to Live.
+     * @param array $notification
      *
      * @return $this
-     * @throws PhpGcmQueueException When TTL is not null|integer OR TTL is not within range
      */
-    public function setTimeToLive($timeToLive) {
-        if(!is_null($timeToLive) && !is_numeric($timeToLive)) {
-            throw new PhpGcmQueueException('GCM\Client->setTimeToLive - Invalid TimeToLive: ' . $timeToLive, PhpGcmQueueException::INVALID_TTL);
-        } else if(is_numeric($timeToLive) && ($timeToLive < self::MIN_TTL || $timeToLive > self::MAX_TTL)) {
-            throw new PhpGcmQueueException('GCM\Client->setTimeToLive - TimeToLive must be between '
-                . self::MIN_TTL . ' and ' . self::MAX_TTL . '. Value: ' . $timeToLive, PhpGcmQueueException::OUTSIDE_TTL);
-        }
-        $this->timeToLive = $timeToLive;
-        return $this;
-    }
-
-    public function getRestrictedPackageName() {
-        return $this->restrictedPackageName;
-    }
-
-    public function setRestrictedPackageName($restrictedPackageName) {
-        $this->restrictedPackageName = $restrictedPackageName;
-        return $this;
-    }
-
-    public function getDryRun() {
-        return $this->dryRun;
-    }
-
-    public function setDryRun($dryRun) {
-        $this->dryRun = $dryRun;
+    public function setNotification($notification)
+    {
+        //TODO: Create Notification object for Android,iOS,watches
+        $this->notification = $notification;
         return $this;
     }
 

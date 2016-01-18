@@ -86,7 +86,7 @@ class Sender {
      * @param string $serverApiKey
      */
     protected static function configCurl(&$curl, $serverApiKey) {
-        $curl->setUserAgent('PhpGcmQueue');
+        $curl->setUserAgent('PhpGcmQueue 2');
         $curl->setOpt(CURLOPT_SSL_VERIFYPEER, 1);
         $curl->setOpt(CURLOPT_SSL_VERIFYHOST, 2);
         $curl->setHeader('Authorization', 'key=' . $serverApiKey);

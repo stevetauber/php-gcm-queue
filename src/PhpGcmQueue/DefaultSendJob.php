@@ -53,15 +53,15 @@ abstract class DefaultSendJob {
                 switch($error) {
                     case 'Unavailable':
                         $message = $this->args['message'];
-                        $message['registration_ids'] = array();
+                        $message['registration_ids'] = [];
                         foreach($group as $id => $item) {
                             $message['registration_ids'][] = $id;
                         }
-                        Client::enqueueFromJobArgs(array(
+                        Client::enqueueFromJobArgs([
                             'serverApiKey' => $this->args['serverApiKey'],
                             'gcmUrl' => $this->args['gcmUrl'],
                             'message' => $message
-                        ));
+                        ]);
                         break;
                     case 'InternalServerError':
                         foreach($group as $item) {
@@ -77,18 +77,22 @@ abstract class DefaultSendJob {
 
                         /**
                          * The following error messages are malformed requests:
-                         *  - DeviceQuotaExceeded
-                         *  - InvalidDataKey
+                         *  - MissingRegistration
                          *  - InvalidPackageName
                          *  - MismatchSenderId
-                         *  - MissingRegistration
-                         *  - QuotaExceeded
+                         *  - InvalidDataKey
+                         */
+
+                        /**
+                         * The follow error messages are throttling (immediately stop sending, do not retry):
+                         *  - DeviceMessageRate Exceeded
+                         *  - TopicsMessageRate Exceeded
                          */
 
                         /**
                          * The follow error messages should never occur since they are explicitly tested for:
-                         *  - InvalidTtl
                          *  - MessageTooBig
+                         *  - InvalidTtl
                          */
                         break;
                 }
