@@ -4,7 +4,7 @@ Google Cloud Messaging (GCM) PHP Server Library
 A PHP library for sending messages to devices registered through Google Cloud Messaging.
 
 Requirements:
- - PHP >=5.3.2
+ - PHP >=5.6
  - Redis database
 
 Libraries used:
@@ -19,7 +19,7 @@ Example usage
 
 ```php
 <?php
-use \PhpGcmQueue;
+use \PhpGcmQueue as GCM;
 
 class YourClass {
 
@@ -95,5 +95,6 @@ $ QUEUE=gcmDefault LOGGING=2 APP_INCLUDE=job_app_include.php php vendor/chrisbou
 ChangeLog
 ----------------------
 * v0.1 - Initial release
+* v1 - Upgraded to support all new commands, iOS, php 5.6 required
 
 Licensed under MIT license.
