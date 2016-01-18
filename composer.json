@@ -2,7 +2,7 @@
 	"name": "stevetauber/php-gcm-queue",
     "type": "library",
     "description": "PHP Google Cloud Messaging (GCM) Queue Library",
-    "keywords": ["GCM", "push message", "android", "resque", "redis", "queue", "curl"],
+    "keywords": ["GCM", "push message", "android", "ios", "resque", "redis", "queue", "curl"],
 	"authors": [
 		{
 			"name": "Steve Tauber",
@@ -11,7 +11,7 @@
 		}
 	],
     "license": "MIT",
-    "version": "0.1",
+    "version": "1",
     "require": {
         "php": ">=5.6",
         "ext-pcntl": "*",
