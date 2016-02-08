@@ -221,6 +221,9 @@ class Message {
                     $return->$methodName($v);
                 }
             }
+            if($return->notification === []) {
+                $return->notification = (object) null;
+            }
             return $return;
         } else {
             throw new PhpGcmQueueException('GCM\Client::fromArray - Invalid or Missing Target: ' . print_r($array, true) , PhpGcmQueueException::INVALID_TARGET);
