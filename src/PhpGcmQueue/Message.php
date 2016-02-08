@@ -192,6 +192,9 @@ class Message {
         } else {
             throw new PhpGcmQueueException('GCM\Client::__construct - Invalid or Missing Target', PhpGcmQueueException::INVALID_TARGET);
         }
+        if($this->notification === []) {
+            $this->notification = (object) null;
+        }
     }
 
     /**
@@ -547,6 +550,9 @@ class Message {
     {
         //TODO: Create Notification object for Android,iOS,watches
         $this->notification = $notification;
+        if($this->notification === []) {
+            $this->notification = (object) null;
+        }
         return $this;
     }
 
