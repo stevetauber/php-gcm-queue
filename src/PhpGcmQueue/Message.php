@@ -249,7 +249,7 @@ class Message {
         if($this->collapseKey !== null) {
             $return['collapse_key'] = $this->collapseKey;
         }
-        if($this->priority !== 'high') {
+        if($this->priority !== 'normal') {
             $return['priority'] = $this->priority;
         }
         if($this->contentAvailable !== false) {
