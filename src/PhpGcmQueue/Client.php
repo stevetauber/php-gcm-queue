@@ -14,7 +14,7 @@ class Client {
      *
      * @var string
      */
-    protected static $gcmUrl = 'https://gcm-http.googleapis.com/gcm/send';
+    protected static $gcmUrl = 'https://f.googleapis.com/fcm/send';
 
     /**
      * Queue Name.
